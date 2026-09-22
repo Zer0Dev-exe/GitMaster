@@ -1,0 +1,38 @@
+{
+  "name": "git-master",
+  "version": "1.0.0",
+  "description": "Monitor, auto-pull, auto-build, and PM2 restarter for multi-repository setups",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "gitmaster": "./dist/cli.js"
+  },
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "build": "tsup",
+    "start": "node dist/index.js",
+    "cli": "tsx src/cli.ts"
+  },
+  "keywords": [
+    "git",
+    "pm2",
+    "auto-pull",
+    "ci-cd",
+    "automation",
+    "watcher"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "chalk": "^5.3.0",
+    "commander": "^12.1.0",
+    "simple-git": "^3.27.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.10",
+    "tsup": "^8.2.4",
+    "tsx": "^4.19.0",
+    "typescript": "^5.5.4"
+  }
+}

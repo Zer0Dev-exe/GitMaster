@@ -1,0 +1,51 @@
+{
+  // Intervalo general en segundos entre comprobaciones si un proyecto no especifica el suyo
+  "intervaloPorDefectoSegundos": 60,
+
+  // Número máximo de proyectos a comprobar simultáneamente
+  "concurrencia": 2,
+
+  // Lista de tus proyectos a vigilar (puedes añadir tantos como quieras)
+  "proyectos": [
+    {
+      // Nombre que tú elijas para identificarlo en la consola y registros
+      "nombre": "mi-proyecto-ejemplo",
+
+      // Ruta de la carpeta donde tienes el proyecto en tu ordenador
+      "ruta": "C:/proyectos/mi-proyecto",
+
+      // Rama de Git que quieres que vigile (por ejemplo "main" o "master")
+      "rama": "main",
+
+      // Cada cuántos segundos quieres que revise este proyecto en particular
+      "intervaloSegundos": 60,
+
+      // Si es true, ejecuta 'pnpm install' automáticamente si cambian dependencias
+      "instalarDependencias": true,
+
+      // Comando para instalar paquetes
+      "comandoInstalar": "pnpm install",
+
+      // Comando para compilar o buildear el proyecto tras el git pull
+      "comandoBuild": "pnpm run build",
+
+      // Configuración de PM2 (si no usas PM2 en este proyecto, puedes poner "pm2": null)
+      "pm2": {
+        // Nombre o ID del proceso tal como aparece en PM2
+        "nombreProceso": "mi-app",
+
+        // Acción a ejecutar: "restart" (reinicio) o "reload" (recarga suave)
+        "accion": "restart",
+
+        // false = SOLO reinicia si ya está encendido en PM2. true = lo arranca aunque esté apagado
+        "iniciarSiEstaApagado": false
+      },
+
+      // Si tienes cambios locales sin commit: true los guarda en stash temporal, false omite pull para no sobreescribir
+      "guardarCambiosLocalesAuto": false,
+
+      // true = vigilar este proyecto. false = ignorarlo temporalmente
+      "activado": false
+    }
+  ]
+}

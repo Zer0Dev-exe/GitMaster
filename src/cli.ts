@@ -6,6 +6,8 @@ import { watcher } from "./core/watcher.js";
 import { pm2Service } from "./core/pm2Service.js";
 import { logger } from "./utils/logger.js";
 import { ProjectConfig } from "./types.js";
+import { runTui } from "./tui.js";
+import { runPushAll } from "./push.js";
 
 const program = new Command();
 
@@ -27,14 +29,43 @@ program
       const handleShutdown = () => {
         console.log("\n");
         logger.info("Recibida señal de detención. Cerrando temporizadores...");
-        watcher.stop();
-        process.exit(0);
+        watcher.stop().finally(() => process.exit(0));
       };
 
       process.on("SIGINT", handleShutdown);
       process.on("SIGTERM", handleShutdown);
     } catch (err) {
       logger.error("Error al iniciar GitMaster:", err);
+      process.exit(1);
+    }
+  });
+
+// Comando: Commit + push de todos los proyectos con trabajo pendiente
+program
+  .command("push-all [projects...]")
+  .description("Hace commit de los cambios locales y push de todos los proyectos con trabajo pendiente de subir")
+  .option("-m, --message <msg>", "Mensaje de commit", "chore: sync changes")
+  .option("-y, --yes", "No pedir confirmación")
+  .option("--dry-run", "Solo mostrar el plan, sin commitear ni subir nada")
+  .action(async (projects: string[], options: { message: string; yes?: boolean; dryRun?: boolean }) => {
+    try {
+      process.exit(await runPushAll(loadConfig(), projects, options));
+    } catch (err) {
+      logger.error("Error en push-all:", err);
+      process.exit(1);
+    }
+  });
+
+// Comando: Interfaz interactiva
+program
+  .command("tui")
+  .alias("ui")
+  .description("Abre el panel interactivo (TUI) con el estado de todos los proyectos y procesos PM2")
+  .action(async () => {
+    try {
+      await runTui(loadConfig());
+    } catch (err) {
+      logger.error("Error en el TUI:", err);
       process.exit(1);
     }
   });

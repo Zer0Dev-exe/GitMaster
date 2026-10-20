@@ -9,6 +9,9 @@ export interface ExecutionResult {
   durationMs: number;
 }
 
+const COMMAND_TIMEOUT_MS = 15 * 60_000;
+const MAX_OUTPUT_CHARS = 200_000;
+
 export class BuildService {
   async executeCommand(command: string, projectPath: string, projectName: string): Promise<ExecutionResult> {
     const startTime = Date.now();
@@ -19,6 +22,7 @@ export class BuildService {
       const child = spawn(command, {
         cwd: path.resolve(projectPath),
         shell: true,
+        timeout: COMMAND_TIMEOUT_MS,
         env: {
           ...process.env,
           FORCE_COLOR: "1"
@@ -28,18 +32,16 @@ export class BuildService {
       let outputBuffer = "";
 
       child.stdout?.on("data", (chunk: Buffer) => {
-        const text = chunk.toString();
-        outputBuffer += text;
+        outputBuffer = (outputBuffer + chunk.toString()).slice(-MAX_OUTPUT_CHARS);
       });
 
       child.stderr?.on("data", (chunk: Buffer) => {
-        const text = chunk.toString();
-        outputBuffer += text;
+        outputBuffer = (outputBuffer + chunk.toString()).slice(-MAX_OUTPUT_CHARS);
       });
 
-      child.on("close", (code) => {
+      child.on("close", (code, signal) => {
         const durationMs = Date.now() - startTime;
-        const exitCode = code ?? 0;
+        const exitCode = code ?? (signal ? 1 : 0);
         if (exitCode === 0) {
           logger.success(`Comando finalizado con éxito (${(durationMs / 1000).toFixed(2)}s)`, projectName);
           resolve({

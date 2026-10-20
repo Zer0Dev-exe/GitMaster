@@ -1,16 +1,21 @@
 import chalk from "chalk";
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 export class Logger {
   private logFilePath: string;
 
   constructor() {
-    const logsDir = path.resolve(process.cwd(), "logs");
+    const logsDir = path.resolve(process.env.GITMASTER_DIR ?? path.resolve(path.dirname(fileURLToPath(import.meta.url)), ".."), "logs");
     if (!fs.existsSync(logsDir)) {
       fs.mkdirSync(logsDir, { recursive: true });
     }
     this.logFilePath = path.join(logsDir, "gitmaster.log");
+  }
+
+  getLogFilePath(): string {
+    return this.logFilePath;
   }
 
   private getTimestamp(): string {

@@ -100,3 +100,12 @@ export interface PullResult {
   changedFiles: string[];
   dependencyFilesChanged: boolean;
 }
+
+export interface PushPlan {
+  branch: string;
+  files: string[];
+  ahead: number;
+  behind: number;
+  /** Motivo por el que este proyecto no se debe subir; si existe, se omite */
+  skip?: string;
+}

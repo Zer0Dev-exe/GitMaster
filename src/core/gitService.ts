@@ -1,7 +1,7 @@
 import { simpleGit, SimpleGit } from "simple-git";
 import fs from "node:fs";
 import path from "node:path";
-import { ProjectConfig, UpdateCheckResult, PullResult } from "../types.js";
+import { ProjectConfig, UpdateCheckResult, PullResult, PushPlan } from "../types.js";
 import { logger } from "../utils/logger.js";
 
 const DEPENDENCY_FILES = new Set([
@@ -12,13 +12,17 @@ const DEPENDENCY_FILES = new Set([
   "pnpm-workspace.yaml"
 ]);
 
+// Ficheros que nunca se deben subir automáticamente
+const SENSITIVE = /(^|\/)(\.env(\.(?!example$|sample$|template$|dist$).*)?|id_rsa|id_ed25519|credentials(\.json)?|.*\.(pem|key|p12|pfx))$/i;
+
 export class GitService {
   private getGit(projectPath: string): SimpleGit {
     return simpleGit({
       baseDir: projectPath,
       binary: "git",
       maxConcurrentProcesses: 4,
-      trimmed: true
+      trimmed: true,
+      timeout: { block: 120_000 }
     });
   }
 
@@ -38,6 +42,61 @@ export class GitService {
     } catch (err) {
       return { valid: false, reason: `Error comprobando repositorio: ${String(err)}` };
     }
+  }
+
+  async hasLocalChanges(project: ProjectConfig): Promise<boolean> {
+    const status = await this.getGit(project.path).status();
+    return status.modified.length > 0 || status.staged.length > 0 || status.deleted.length > 0;
+  }
+
+  async getPushPlan(project: ProjectConfig): Promise<PushPlan> {
+    const git = this.getGit(project.path);
+    const remote = project.remote || "origin";
+    const status = await git.status();
+    const branch = status.current && status.current !== "HEAD" ? status.current : "";
+    const files = status.files.map((f) => f.path);
+    const plan: PushPlan = { branch, files, ahead: 0, behind: 0 };
+
+    if (!branch) return { ...plan, skip: "HEAD desacoplado (sin rama)" };
+    if (project.branch && project.branch !== branch) {
+      return { ...plan, skip: `está en '${branch}', se esperaba '${project.branch}'` };
+    }
+    const sensitive = files.filter((f) => SENSITIVE.test(f));
+    if (sensitive.length > 0) {
+      return { ...plan, skip: `contiene ficheros sensibles sin ignorar: ${sensitive.join(", ")}` };
+    }
+
+    try {
+      await git.fetch(remote, branch);
+    } catch (err) {
+      return { ...plan, skip: `sin acceso al remoto '${remote}': ${String(err).split("\n")[0]}` };
+    }
+
+    try {
+      const raw = await git.raw(["rev-list", "--left-right", "--count", `HEAD...${remote}/${branch}`]);
+      const [ahead, behind] = raw.trim().split(/\s+/).map((n) => parseInt(n, 10) || 0);
+      plan.ahead = ahead;
+      plan.behind = behind;
+    } catch {
+      // La rama aún no existe en el remoto: todos sus commits son nuevos
+      plan.ahead = parseInt((await git.raw(["rev-list", "--count", "HEAD"])).trim(), 10) || 0;
+    }
+
+    if (plan.behind > 0) plan.skip = `va ${plan.behind} commit(s) por detrás del remoto: haz pull antes`;
+    return plan;
+  }
+
+  async commitAndPush(project: ProjectConfig, plan: PushPlan, message: string): Promise<{ committed: boolean }> {
+    const git = this.getGit(project.path);
+    const remote = project.remote || "origin";
+    let committed = false;
+    if (plan.files.length > 0) {
+      await git.add(["-A"]);
+      await git.commit(message);
+      committed = true;
+    }
+    await git.push(remote, plan.branch);
+    return { committed };
   }
 
   async getActiveBranch(project: ProjectConfig): Promise<string> {
@@ -123,7 +182,7 @@ export class GitService {
 
     try {
       logger.git(`Ejecutando git pull ${remote} ${branch}...`, project.name);
-      const pullResult = await git.pull(remote, branch);
+      const pullResult = await git.pull(remote, branch, { "--ff-only": null });
       const commitAfter = await git.revparse(["HEAD"]);
 
       const changedFiles = pullResult.files || [];

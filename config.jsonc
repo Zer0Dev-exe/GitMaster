@@ -8,44 +8,180 @@
   // Lista de tus proyectos a vigilar (puedes añadir tantos como quieras)
   "proyectos": [
     {
-      // Nombre que tú elijas para identificarlo en la consola y registros
-      "nombre": "mi-proyecto-ejemplo",
-
-      // Ruta de la carpeta donde tienes el proyecto en tu ordenador
-      "ruta": "C:/proyectos/mi-proyecto",
-
-      // Rama de Git que quieres que vigile (por ejemplo "main" o "master")
-      "rama": "main",
-
-      // Cada cuántos segundos quieres que revise este proyecto en particular
+      "nombre": "AstraAPI",
+      "ruta": "/home/ubuntu/Astra/AstraAPI",
+      "rama": "master",
       "intervaloSegundos": 60,
-
-      // Si es true, ejecuta 'pnpm install' automáticamente si cambian dependencias
       "instalarDependencias": true,
-
-      // Comando para instalar paquetes
-      "comandoInstalar": "pnpm install",
-
-      // Comando para compilar o buildear el proyecto tras el git pull
-      "comandoBuild": "pnpm run build",
-
-      // Configuración de PM2 (si no usas PM2 en este proyecto, puedes poner "pm2": null)
+      "comandoInstalar": "npm install",
+      "comandoBuild": "",
       "pm2": {
-        // Nombre o ID del proceso tal como aparece en PM2
-        "nombreProceso": "mi-app",
-
-        // Acción a ejecutar: "restart" (reinicio) o "reload" (recarga suave)
+        "nombreProceso": "AstraAPI",
         "accion": "restart",
-
-        // false = SOLO reinicia si ya está encendido en PM2. true = lo arranca aunque esté apagado
         "iniciarSiEstaApagado": false
       },
-
-      // Si tienes cambios locales sin commit: true los guarda en stash temporal, false omite pull para no sobreescribir
       "guardarCambiosLocalesAuto": false,
-
-      // true = vigilar este proyecto. false = ignorarlo temporalmente
-      "activado": false
+      "activado": true
+    },
+    {
+      "nombre": "AstraBack",
+      "ruta": "/home/ubuntu/Astra/AstraBack",
+      "rama": "main",
+      "intervaloSegundos": 60,
+      "instalarDependencias": true,
+      "comandoInstalar": "npm install",
+      "comandoBuild": "",
+      "pm2": {
+        "nombreProceso": "AstraBack",
+        "accion": "restart",
+        "iniciarSiEstaApagado": false
+      },
+      "guardarCambiosLocalesAuto": false,
+      "activado": true
+    },
+    {
+      "nombre": "AstraFrontEnd",
+      "ruta": "/home/ubuntu/Astra/AstraFrontEnd",
+      "rama": "master",
+      "intervaloSegundos": 60,
+      "instalarDependencias": true,
+      "comandoInstalar": "npm install",
+      "comandoBuild": "npm run build",
+      "pm2": {
+        "nombreProceso": "AstraFrontEnd",
+        "accion": "restart",
+        "iniciarSiEstaApagado": false
+      },
+      "guardarCambiosLocalesAuto": false,
+      "activado": true
+    },
+    {
+      "nombre": "ClaudeZer0",
+      "ruta": "/home/ubuntu/Utils/ClaudeZer0",
+      "rama": "main",
+      "intervaloSegundos": 60,
+      "instalarDependencias": true,
+      "comandoInstalar": "pnpm install",
+      "comandoBuild": "",
+      "pm2": {
+        "nombreProceso": "ClaudeZer0",
+        "accion": "restart",
+        "iniciarSiEstaApagado": false
+      },
+      "guardarCambiosLocalesAuto": false,
+      "activado": true
+    },
+    {
+      "nombre": "HPBot",
+      "ruta": "/home/ubuntu/HP/HPBot",
+      "rama": "main",
+      "intervaloSegundos": 60,
+      "instalarDependencias": true,
+      "comandoInstalar": "pnpm install",
+      "comandoBuild": "",
+      "pm2": {
+        "nombreProceso": "HPBot",
+        "accion": "restart",
+        "iniciarSiEstaApagado": false
+      },
+      "guardarCambiosLocalesAuto": false,
+      "activado": true
+    },
+    {
+      "nombre": "TSManager",
+      "ruta": "/home/ubuntu/TS/TSManager",
+      "rama": "master",
+      "intervaloSegundos": 60,
+      "instalarDependencias": true,
+      "comandoInstalar": "pnpm install",
+      "comandoBuild": "pnpm run build",
+      "pm2": {
+        "nombreProceso": "TSManager",
+        "accion": "restart",
+        "iniciarSiEstaApagado": false
+      },
+      "guardarCambiosLocalesAuto": false,
+      "activado": true
+    },
+    {
+      "nombre": "ts-levelling",
+      "ruta": "/home/ubuntu/TS/TS-Levelling",
+      "rama": "main",
+      "intervaloSegundos": 60,
+      "instalarDependencias": true,
+      "comandoInstalar": "pnpm install",
+      "comandoBuild": "",
+      "pm2": {
+        "nombreProceso": "ts-levelling",
+        "accion": "restart",
+        "iniciarSiEstaApagado": false
+      },
+      "guardarCambiosLocalesAuto": false,
+      "activado": true
+    },
+    {
+      "nombre": "AstraLevelling",
+      "ruta": "/home/ubuntu/Astra/AstraLevelling",
+      "rama": "main",
+      "intervaloSegundos": 60,
+      "instalarDependencias": true,
+      "comandoInstalar": "pnpm install",
+      "comandoBuild": "",
+      "pm2": {
+        "nombreProceso": "AstraLevelling",
+        "accion": "restart",
+        "iniciarSiEstaApagado": false
+      },
+      "guardarCambiosLocalesAuto": false,
+      "activado": true
+    },
+    {
+      "nombre": "MangoBot",
+      "ruta": "/home/ubuntu/MangoBot",
+      "rama": "main",
+      "intervaloSegundos": 60,
+      "instalarDependencias": true,
+      "comandoInstalar": "pnpm install",
+      "comandoBuild": "",
+      "pm2": {
+        "nombreProceso": "MangoBot",
+        "accion": "restart",
+        "iniciarSiEstaApagado": false
+      },
+      "guardarCambiosLocalesAuto": false,
+      "activado": true
+    },
+    {
+      "nombre": "GitMaster",
+      "ruta": "/home/ubuntu/Utils/GitMaster",
+      "rama": "main",
+      "intervaloSegundos": 60,
+      "instalarDependencias": true,
+      "comandoInstalar": "pnpm install",
+      "comandoBuild": "pnpm run build",
+      "pm2": {
+        "nombreProceso": "GitMaster",
+        "accion": "restart",
+        "iniciarSiEstaApagado": false
+      },
+      "guardarCambiosLocalesAuto": false,
+      "activado": true
+    },
+    {
+      "nombre": "legado-rp",
+      "ruta": "/home/ubuntu/LegadoRP",
+      "rama": "main",
+      "intervaloSegundos": 60,
+      "instalarDependencias": false,
+      "comandoInstalar": "",
+      "comandoBuild": "",
+      "pm2": {
+        "nombreProceso": "legado-rp",
+        "accion": "restart",
+        "iniciarSiEstaApagado": false
+      },
+      "guardarCambiosLocalesAuto": false,
+      "activado": true
     }
   ]
 }

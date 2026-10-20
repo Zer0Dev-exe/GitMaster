@@ -8,6 +8,18 @@ export class Watcher {
   private activeLocks = new Set<string>();
   private intervals: NodeJS.Timeout[] = [];
   private isRunning = false;
+  // Proyectos con pull hecho pero pipeline (install/build/pm2) fallido: se reintenta sin volver a hacer pull
+  private pendingPipeline = new Map<string, { installDeps: boolean }>();
+  // Último error por proyecto, para no repetir el mismo mensaje en cada tick
+  private lastErrors = new Map<string, string>();
+
+  getLastError(projectName: string): string | undefined {
+    return this.lastErrors.get(projectName.toLowerCase());
+  }
+
+  hasPendingPipeline(projectName: string): boolean {
+    return this.pendingPipeline.has(projectName.toLowerCase());
+  }
 
   async processProject(project: ProjectConfig): Promise<boolean> {
     if (!project.enabled) {
@@ -30,35 +42,46 @@ export class Watcher {
         return false;
       }
 
-      // 2. Comprobar si hay novedades en el repositorio remoto
-      const updateStatus = await gitService.checkForUpdates(project);
+      const pending = this.pendingPipeline.get(lockKey);
+      let installDeps = false;
 
-      if (!updateStatus.hasUpdates) {
-        // Todo al día
-        logger.info(
-          `Al día (rama '${updateStatus.branch}', commit ${updateStatus.currentCommit.substring(0, 7)})`,
+      if (pending) {
+        logger.warn(`Reintentando pipeline pendiente de una actualización anterior (build/instalación fallida).`, project.name);
+        installDeps = pending.installDeps;
+      } else {
+        // 2. Comprobar si hay novedades en el repositorio remoto
+        const updateStatus = await gitService.checkForUpdates(project);
+
+        if (!updateStatus.hasUpdates) {
+          this.lastErrors.delete(lockKey);
+          logger.info(
+            `Al día (rama '${updateStatus.branch}', commit ${updateStatus.currentCommit.substring(0, 7)})`,
+            project.name
+          );
+          return false;
+        }
+
+        logger.git(
+          `Novedad detectada: ${updateStatus.commitsBehind} commit(s) pendientes en '${updateStatus.branch}'. Procediendo con actualización...`,
           project.name
         );
-        return false;
+
+        // 3. Hacer pull de los cambios
+        const pullResult = await gitService.pullUpdates(project);
+        logger.success(
+          `Pull completado (${pullResult.commitBefore.substring(0, 7)} -> ${pullResult.commitAfter.substring(0, 7)}). Archivos modificados: ${pullResult.changedFiles.length}`,
+          project.name
+        );
+        installDeps = pullResult.dependencyFilesChanged;
+        this.pendingPipeline.set(lockKey, { installDeps });
       }
 
-      logger.git(
-        `Novedad detectada: ${updateStatus.commitsBehind} commit(s) pendientes en '${updateStatus.branch}'. Procediendo con actualización...`,
-        project.name
-      );
-
-      // 3. Hacer pull de los cambios
-      const pullResult = await gitService.pullUpdates(project);
-      logger.success(
-        `Pull completado (${pullResult.commitBefore.substring(0, 7)} -> ${pullResult.commitAfter.substring(0, 7)}). Archivos modificados: ${pullResult.changedFiles.length}`,
-        project.name
-      );
-
       // 4. Instalar dependencias si hubo cambios en los ficheros de dependencias
-      if (project.installDepsOnPull && pullResult.dependencyFilesChanged) {
+      if (project.installDepsOnPull && installDeps) {
         const installCmd = project.installCommand || "pnpm install";
         logger.build(`Se detectaron cambios en archivos de dependencias. Ejecutando: ${installCmd}`, project.name);
         await buildService.executeCommand(installCmd, project.path, project.name);
+        this.pendingPipeline.set(lockKey, { installDeps: false });
       }
 
       // 5. Ejecutar Build si está configurado
@@ -72,10 +95,16 @@ export class Watcher {
         await pm2Service.handlePm2Restart(project.pm2, project.name);
       }
 
+      this.pendingPipeline.delete(lockKey);
+      this.lastErrors.delete(lockKey);
       logger.success(`Pipeline de actualización completado exitosamente.`, project.name);
       return true;
     } catch (error) {
-      logger.error(`Error en ciclo de actualización:`, error, project.name);
+      const message = error instanceof Error ? error.message : String(error);
+      if (this.lastErrors.get(lockKey) !== message) {
+        this.lastErrors.set(lockKey, message);
+        logger.error(`Error en ciclo de actualización (no se repetirá el aviso hasta que cambie):`, error, project.name);
+      }
       return false;
     } finally {
       this.activeLocks.delete(lockKey);
@@ -91,9 +120,13 @@ export class Watcher {
 
     logger.info(`Comprobando ${enabledProjects.length} proyecto(s)...`);
 
-    for (const project of enabledProjects) {
-      await this.processProject(project);
-    }
+    const queue = [...enabledProjects];
+    const workers = Array.from({ length: Math.min(config.concurrency, queue.length) }, async () => {
+      for (let project = queue.shift(); project; project = queue.shift()) {
+        await this.processProject(project);
+      }
+    });
+    await Promise.all(workers);
   }
 
   start(config: GitMasterConfig): void {
@@ -106,7 +139,9 @@ export class Watcher {
     logger.info(`Iniciando GitMaster con ${config.projects.length} proyecto(s) configurado(s).`);
 
     // Comprobación inicial inmediata de todos los proyectos
-    this.checkAll(config);
+    this.checkAll(config).catch((err) => {
+      logger.error("Error en la comprobación inicial:", err);
+    });
 
     // Programar intervalo específico para cada proyecto
     for (const project of config.projects) {
@@ -133,12 +168,19 @@ export class Watcher {
     logger.success("GitMaster está activo y vigilando los repositorios.");
   }
 
-  stop(): void {
+  async stop(): Promise<void> {
     for (const timer of this.intervals) {
       clearInterval(timer);
     }
     this.intervals = [];
     this.isRunning = false;
+
+    // Esperar a que terminen pulls/builds en curso para no dejar repos a medias
+    const deadline = Date.now() + 5 * 60_000;
+    while (this.activeLocks.size > 0 && Date.now() < deadline) {
+      logger.info(`Esperando a que terminen ${this.activeLocks.size} proyecto(s) en curso...`);
+      await new Promise((r) => setTimeout(r, 2000));
+    }
     logger.info("GitMaster detenido.");
   }
 }

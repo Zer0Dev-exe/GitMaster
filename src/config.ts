@@ -1,19 +1,26 @@
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { GitMasterConfig, GitMasterConfigSchema, ProjectConfig } from "./types.js";
 import { logger } from "./utils/logger.js";
 
 const CONFIG_FILES = ["config.jsonc", "config.json"];
 
+// La config vive junto al proyecto (src/ o dist/ -> carpeta padre), no en el directorio desde el que se lanza el comando.
+// Se puede sobreescribir con GITMASTER_DIR.
+const CONFIG_DIR = process.env.GITMASTER_DIR
+  ? path.resolve(process.env.GITMASTER_DIR)
+  : path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+
 export function getConfigFilePath(): string {
   for (const filename of CONFIG_FILES) {
-    const candidatePath = path.resolve(process.cwd(), filename);
+    const candidatePath = path.resolve(CONFIG_DIR, filename);
     if (fs.existsSync(candidatePath)) {
       return candidatePath;
     }
   }
   // Si aún no existe ninguno, se creará preferentemente como config.jsonc
-  return path.resolve(process.cwd(), "config.jsonc");
+  return path.resolve(CONFIG_DIR, "config.jsonc");
 }
 
 function stripComments(jsonString: string): string {

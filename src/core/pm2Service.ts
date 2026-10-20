@@ -14,7 +14,7 @@ export interface Pm2ProcessInfo {
 export class Pm2Service {
   async getProcessList(): Promise<Pm2ProcessInfo[]> {
     try {
-      const { stdout } = await execAsync("pm2 jlist", { windowsHide: true });
+      const { stdout } = await execAsync("pm2 jlist", { windowsHide: true, maxBuffer: 64 * 1024 * 1024 });
       const rawList = JSON.parse(stdout);
       if (!Array.isArray(rawList)) {
         return [];

@@ -15,8 +15,8 @@ importers:
         specifier: ^12.1.0
         version: 12.1.0
       simple-git:
-        specifier: ^3.27.0
-        version: 3.36.0
+        specifier: ^4.0.2
+        version: 4.0.2
       zod:
         specifier: ^3.23.8
         version: 3.25.76
@@ -512,11 +512,11 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@simple-git/args-pathspec@1.0.3':
-    resolution: {integrity: sha512-ngJMaHlsWDTfjyq9F3VIQ8b7NXbBLq5j9i5bJ6XLYtD6qlDXT7fdKY2KscWWUF8t18xx052Y/PUO1K1TRc9yKA==}
+  '@simple-git/args-pathspec@1.0.4':
+    resolution: {integrity: sha512-EtMX6XjRWSastG2SdkmSQByPtJ9dx/NIjnHbpQPCYt62j4RmSx5rgLTGpw0YCjF5h191gZOmBfheOT23cRSFdw==}
 
-  '@simple-git/argv-parser@1.1.1':
-    resolution: {integrity: sha512-Q9lBcfQ+VQCpQqGJFHe5yooOS5hGdLFFbJ5R+R5aDsnkPCahtn1hSkMcORX65J2Z5lxSkD0lQorMsncuBQxYUw==}
+  '@simple-git/argv-parser@2.0.1':
+    resolution: {integrity: sha512-M++IaVWrN+vYalilOHfwvT2IL3wYZtVEBQpmX6DLSOJLtxbZ+SUeIDE3IiPogzhPACLajwtxfa5rp+ZX1FczzQ==}
 
   '@types/estree@1.0.9':
     resolution: {integrity: sha512-GhdPgy1el4/ImP05X05Uw4cw2/M93BCUmnEvWZNStlCzEKME4Fkk+YpoA5OiHNQmoS7Cafb8Xa3Pya8m1Qrzeg==}
@@ -680,8 +680,8 @@ packages:
     engines: {node: '>=18.0.0', npm: '>=8.0.0'}
     hasBin: true
 
-  simple-git@3.36.0:
-    resolution: {integrity: sha512-cGQjLjK8bxJw4QuYT7gxHw3/IouVESbhahSsHrX97MzCL1gu2u7oy38W6L2ZIGECEfIBG4BabsWDPjBxJENv9Q==}
+  simple-git@4.0.2:
+    resolution: {integrity: sha512-l0sIsv9VrPwovKELFDBOj/lhmIcbMvxBk2B+hRhsMM4/VL3gKtuZvYnBNixVo+N/0HnqQx2cBdLvxnAbygHpqA==}
 
   source-map@0.7.6:
     resolution: {integrity: sha512-i5uvt8C3ikiWeNZSVZNWcfZPItFQOsYTUAOkcUPGd8DqDy1uOUikjt5dG+uRlwyvR108Fb9DOd4GvXfT0N2/uQ==}
@@ -1009,11 +1009,11 @@ snapshots:
   '@rollup/rollup-win32-x64-msvc@4.63.4':
     optional: true
 
-  '@simple-git/args-pathspec@1.0.3': {}
+  '@simple-git/args-pathspec@1.0.4': {}
 
-  '@simple-git/argv-parser@1.1.1':
+  '@simple-git/argv-parser@2.0.1':
     dependencies:
-      '@simple-git/args-pathspec': 1.0.3
+      '@simple-git/args-pathspec': 1.0.4
 
   '@types/estree@1.0.9': {}
 
@@ -1206,12 +1206,12 @@ snapshots:
       '@rollup/rollup-win32-x64-msvc': 4.63.4
       fsevents: 2.3.3
 
-  simple-git@3.36.0:
+  simple-git@4.0.2:
     dependencies:
       '@kwsites/file-exists': 1.1.1
       '@kwsites/promise-deferred': 1.1.1
-      '@simple-git/args-pathspec': 1.0.3
-      '@simple-git/argv-parser': 1.1.1
+      '@simple-git/args-pathspec': 1.0.4
+      '@simple-git/argv-parser': 2.0.1
       debug: 4.4.3
     transitivePeerDependencies:
       - supports-color
